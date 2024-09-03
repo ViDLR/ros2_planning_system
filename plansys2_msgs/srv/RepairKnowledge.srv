@@ -1,0 +1,8 @@
+# RepairKnowledge.srv
+
+# Request part
+string[] robot_names  # List of robot names
+---
+# Response part
+bool success
+string message

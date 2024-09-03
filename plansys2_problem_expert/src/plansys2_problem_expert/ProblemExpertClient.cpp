@@ -83,6 +83,12 @@ ProblemExpertClient::ProblemExpertClient()
   is_problem_goal_satisfied_client_ =
     node_->create_client<plansys2_msgs::srv::IsProblemGoalSatisfied>(
     "problem_expert/is_problem_goal_satisfied");
+  repair_knowledge_client_ = 
+    node_->create_client<plansys2_msgs::srv::RepairKnowledge>(
+    "problem_expert/repair_knowledge");
+  subscribe_to_knowledge_topics_client_ = 
+    node_->create_client<plansys2_msgs::srv::SubscribeKnowledgeTopics>(
+    "problem_expert/subscribe_knowledge_topics");
 }
 
 std::vector<plansys2::Instance>
@@ -898,6 +904,69 @@ ProblemExpertClient::addProblem(const std::string & problem_str)
       node_->get_logger(),
       add_problem_client_->get_service_name() << ": " <<
         result.error_info);
+    return false;
+  }
+}
+
+bool 
+ProblemExpertClient::repairknowledge(const std::vector<std::string>& robot_names)
+{
+  while (!repair_knowledge_client_->wait_for_service(std::chrono::seconds(1))) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service.");
+      return false;
+    }
+    RCLCPP_INFO(node_->get_logger(), "Waiting for service to appear...");
+  }
+
+  auto request = std::make_shared<plansys2_msgs::srv::RepairKnowledge::Request>();
+  request->robot_names = robot_names;  // Set the list of robot names
+
+  auto future_result = repair_knowledge_client_->async_send_request(request);
+
+  if (rclcpp::spin_until_future_complete(node_, future_result) ==
+      rclcpp::FutureReturnCode::SUCCESS) {
+    auto result = future_result.get();
+    if (result->success) {
+      RCLCPP_INFO(node_->get_logger(), "Knowledge repair successful: %s", result->message.c_str());
+    } else {
+      RCLCPP_ERROR(node_->get_logger(), "Knowledge repair failed: %s", result->message.c_str());
+    }
+    return result->success;
+  } else {
+    RCLCPP_ERROR(node_->get_logger(), "Failed to call service");
+    return false;
+  }
+}
+
+bool ProblemExpertClient::subscribe_to_knowledge_topics(const std::vector<std::string>& robot_names)
+{
+  auto client = node_->create_client<plansys2_msgs::srv::SubscribeKnowledgeTopics>("problem_expert/subscribe_knowledge_topics");
+
+  while (!client->wait_for_service(std::chrono::seconds(1))) {
+    if (!rclcpp::ok()) {
+      RCLCPP_ERROR(node_->get_logger(), "Interrupted while waiting for the service.");
+      return false;
+    }
+    RCLCPP_INFO(node_->get_logger(), "Waiting for service to appear...");
+  }
+
+  auto request = std::make_shared<plansys2_msgs::srv::SubscribeKnowledgeTopics::Request>();
+  request->robot_names = robot_names;
+
+  auto future_result = client->async_send_request(request);
+
+  if (rclcpp::spin_until_future_complete(node_, future_result) ==
+      rclcpp::FutureReturnCode::SUCCESS) {
+    auto result = future_result.get();
+    if (result->success) {
+      RCLCPP_INFO(node_->get_logger(), "Subscribed to knowledge topics: %s", result->message.c_str());
+    } else {
+      RCLCPP_ERROR(node_->get_logger(), "Failed to subscribe to knowledge topics: %s", result->message.c_str());
+    }
+    return result->success;
+  } else {
+    RCLCPP_ERROR(node_->get_logger(), "Failed to call service");
     return false;
   }
 }

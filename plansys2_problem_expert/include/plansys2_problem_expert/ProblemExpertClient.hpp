@@ -39,6 +39,8 @@
 #include "plansys2_msgs/srv/is_problem_goal_satisfied.hpp"
 #include "plansys2_msgs/srv/remove_problem_goal.hpp"
 #include "plansys2_msgs/srv/clear_problem_knowledge.hpp"
+#include "plansys2_msgs/srv/repair_knowledge.hpp"
+#include "plansys2_msgs/srv/subscribe_knowledge_topics.hpp" 
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -77,6 +79,9 @@ public:
 
   std::string getProblem();
   bool addProblem(const std::string & problem_str);
+
+  bool repairknowledge(const std::vector<std::string>& robot_names);
+  bool subscribe_to_knowledge_topics(const std::vector<std::string>& robot_names);
 
   rclcpp::Time getUpdateTime() const {return update_time_;}
 
@@ -125,6 +130,11 @@ private:
     update_problem_function_client_;
   rclcpp::Client<plansys2_msgs::srv::IsProblemGoalSatisfied>::SharedPtr
     is_problem_goal_satisfied_client_;
+  rclcpp::Client<plansys2_msgs::srv::RepairKnowledge>::SharedPtr 
+    repair_knowledge_client_;
+  rclcpp::Client<plansys2_msgs::srv::SubscribeKnowledgeTopics>::SharedPtr 
+    subscribe_to_knowledge_topics_client_;
+
   rclcpp::Node::SharedPtr node_;
   rclcpp::Time update_time_;
 };

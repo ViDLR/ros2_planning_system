@@ -1,0 +1,8 @@
+# SubscribeKnowledgeTopics.srv
+# Request
+string[] robot_names  # List of robot names to subscribe to their knowledge topics
+---
+# Response
+bool success  # True if subscription was successful
+string message  # Informational message about the subscription process
+

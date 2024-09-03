@@ -31,6 +31,7 @@
 
 #include "lifecycle_msgs/msg/state.hpp"
 #include "plansys2_msgs/msg/action_execution_info.hpp"
+#include "plansys2_msgs/msg/knowledge.hpp"
 #include "plansys2_msgs/msg/plan.hpp"
 
 #include "ament_index_cpp/get_package_share_directory.hpp"
@@ -101,6 +102,7 @@ ExecutorNode::ExecutorNode()
       &ExecutorNode::get_plan_service_callback,
       this, std::placeholders::_1, std::placeholders::_2,
       std::placeholders::_3));
+  
 }
 
 
@@ -166,6 +168,8 @@ ExecutorNode::on_configure(const rclcpp_lifecycle::State & state)
     std::istreambuf_iterator<char>(end_action_bt_ifs), std::istreambuf_iterator<char>());
 
   dotgraph_pub_ = this->create_publisher<std_msgs::msg::String>("dot_graph", 1);
+
+  knowledge_pub_ = this->create_publisher<plansys2_msgs::msg::Knowledge>("knowledge_updates", 10);
   execution_info_pub_ = create_publisher<plansys2_msgs::msg::ActionExecutionInfo>(
     "action_execution_info", 100);
   executing_plan_pub_ = create_publisher<plansys2_msgs::msg::Plan>(

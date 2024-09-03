@@ -38,6 +38,8 @@
 #include "plansys2_msgs/srv/is_problem_goal_satisfied.hpp"
 #include "plansys2_msgs/srv/remove_problem_goal.hpp"
 #include "plansys2_msgs/srv/clear_problem_knowledge.hpp"
+#include "plansys2_msgs/srv/repair_knowledge.hpp" 
+#include "plansys2_msgs/srv/subscribe_knowledge_topics.hpp" 
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
@@ -172,9 +174,20 @@ public:
     const std::shared_ptr<plansys2_msgs::srv::AffectNode::Request> request,
     const std::shared_ptr<plansys2_msgs::srv::AffectNode::Response> response);
 
+  void repair_knowledge_service_callback(
+    const std::shared_ptr<rmw_request_id_t> request_header,
+    const std::shared_ptr<plansys2_msgs::srv::RepairKnowledge::Request> request,
+    const std::shared_ptr<plansys2_msgs::srv::RepairKnowledge::Response> response);
+
+  void subscribe_knowledge_topics_service_callback(
+    const std::shared_ptr<rmw_request_id_t> request_header,
+    const std::shared_ptr<plansys2_msgs::srv::SubscribeKnowledgeTopics::Request> request,
+    const std::shared_ptr<plansys2_msgs::srv::SubscribeKnowledgeTopics::Response> response);
+
 private:
   std::shared_ptr<ProblemExpert> problem_expert_;
-
+  
+  
   rclcpp::Service<plansys2_msgs::srv::AddProblem>::SharedPtr
     add_problem_service_;
   rclcpp::Service<plansys2_msgs::srv::AddProblemGoal>::SharedPtr
@@ -219,7 +232,18 @@ private:
     exist_problem_function_service_;
   rclcpp::Service<plansys2_msgs::srv::AffectNode>::SharedPtr
     update_problem_function_service_;
+  rclcpp::Service<plansys2_msgs::srv::RepairKnowledge>::SharedPtr
+    repair_knowledge_service_;
+  rclcpp::Service<plansys2_msgs::srv::SubscribeKnowledgeTopics>::SharedPtr 
+    subscribe_knowledge_topics_service_;
 
+
+  std::map<std::string, rclcpp::Subscription<plansys2_msgs::msg::Knowledge>::SharedPtr> knowledge_subscriptions_;
+  std::map<std::string, plansys2_msgs::msg::Knowledge> latest_knowledge_;
+  std::mutex knowledge_mutex_;
+
+  void knowledge_callback(const plansys2_msgs::msg::Knowledge::SharedPtr msg);
+    
   rclcpp_lifecycle::LifecyclePublisher<std_msgs::msg::Empty>::SharedPtr update_pub_;
   rclcpp_lifecycle::LifecyclePublisher<plansys2_msgs::msg::Knowledge>::SharedPtr knowledge_pub_;
 };

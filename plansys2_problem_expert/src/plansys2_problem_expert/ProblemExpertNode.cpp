@@ -201,6 +201,20 @@ ProblemExpertNode::ProblemExpertNode()
       this, std::placeholders::_1, std::placeholders::_2,
       std::placeholders::_3));
 
+  repair_knowledge_service_ = create_service<plansys2_msgs::srv::RepairKnowledge>(
+    "problem_expert/repair_knowledge",
+    std::bind(
+      &ProblemExpertNode::repair_knowledge_service_callback,
+      this, std::placeholders::_1, std::placeholders::_2, 
+      std::placeholders::_3));
+
+  subscribe_knowledge_topics_service_ = create_service<plansys2_msgs::srv::SubscribeKnowledgeTopics>(
+    "problem_expert/subscribe_knowledge_topics",
+    std::bind(
+      &ProblemExpertNode::subscribe_knowledge_topics_service_callback,
+      this, std::placeholders::_1, std::placeholders::_2, 
+      std::placeholders::_3));
+
   update_pub_ = create_publisher<std_msgs::msg::Empty>(
     "problem_expert/update_notify",
     rclcpp::QoS(100));
@@ -208,6 +222,7 @@ ProblemExpertNode::ProblemExpertNode()
   knowledge_pub_ = create_publisher<plansys2_msgs::msg::Knowledge>(
     "problem_expert/knowledge",
     rclcpp::QoS(100).transient_local());
+    
 }
 
 
@@ -733,6 +748,98 @@ ProblemExpertNode::update_problem_function_service_callback(
     } else {
       response->error_info = "Function not valid";
     }
+  }
+}
+
+void ProblemExpertNode::repair_knowledge_service_callback(
+  const std::shared_ptr<rmw_request_id_t> request_header,
+  const std::shared_ptr<plansys2_msgs::srv::RepairKnowledge::Request> request,
+  const std::shared_ptr<plansys2_msgs::srv::RepairKnowledge_Response> response)
+{
+  std::lock_guard<std::mutex> lock(knowledge_mutex_);
+  std::string report = "Repairing knowledge for robots: ";
+  bool success = true;
+
+  for (const auto& robot_name : request->robot_names) {
+    auto it = latest_knowledge_.find(robot_name);
+    if (it == latest_knowledge_.end()) {
+      RCLCPP_ERROR(get_logger(), "No knowledge received for robot: %s", robot_name.c_str());
+      success = false;
+      continue;
+    }
+
+    const auto& robot_knowledge = it->second;
+
+    // Compare with current predicates and add missing ones
+    for (const auto& predicate_str : robot_knowledge.predicates) {
+      // Parse the predicate string to a Node
+      auto predicate_node = parser::pddl::fromStringPredicate(predicate_str);
+      
+      // Check if the predicate already exists
+      auto current_predicates = problem_expert_->getPredicates();
+      bool predicate_exists = std::any_of(current_predicates.begin(), current_predicates.end(),
+                                          [&predicate_node](const plansys2::Predicate &p) {
+                                            return parser::pddl::toString(p) == parser::pddl::toString(predicate_node);
+                                          });
+
+      // Add the predicate if it doesn't exist
+      if (!predicate_exists) {
+        if (!problem_expert_->addPredicate(predicate_node)) {
+          RCLCPP_ERROR(get_logger(), "Failed to add predicate: %s", parser::pddl::toString(predicate_node).c_str());
+          success = false;
+        } else {
+          RCLCPP_INFO(get_logger(), "Successfully added predicate: %s", parser::pddl::toString(predicate_node).c_str());
+        }
+      } else {
+        RCLCPP_INFO(get_logger(), "Predicate already exists: %s", parser::pddl::toString(predicate_node).c_str());
+      }
+    }
+
+    report += robot_name + " ";
+  }
+
+  response->success = success;
+  response->message = success ? report + " - Repair successful." : report + " - Repair failed.";
+}
+
+void ProblemExpertNode::subscribe_knowledge_topics_service_callback(
+  const std::shared_ptr<rmw_request_id_t> request_header,
+  const std::shared_ptr<plansys2_msgs::srv::SubscribeKnowledgeTopics::Request> request,
+  const std::shared_ptr<plansys2_msgs::srv::SubscribeKnowledgeTopics::Response> response)
+{
+  std::string report = "Subscribing to knowledge topics for robots: ";
+  
+  for (const auto& robot_name : request->robot_names) {
+    std::string topic_name = "/simulation_knowledge_" + robot_name;
+    auto sub = this->create_subscription<plansys2_msgs::msg::Knowledge>(
+        topic_name, 10, std::bind(&ProblemExpertNode::knowledge_callback, this, std::placeholders::_1));
+
+    knowledge_subscriptions_[robot_name] = sub;
+    report += robot_name + " ";
+  }
+
+  response->success = true;
+  response->message = report + " - Subscription successful.";
+}
+
+void ProblemExpertNode::knowledge_callback(const plansys2_msgs::msg::Knowledge::SharedPtr msg)
+{
+  std::lock_guard<std::mutex> lock(knowledge_mutex_);
+  
+  // Extract robot ID from the instances
+  std::string robot_id;
+  for (const auto & instance : msg->instances) {
+    if (instance.find("robot") != std::string::npos) {
+      robot_id = instance;
+      break;
+    }
+  }
+
+  if (!robot_id.empty()) {
+    latest_knowledge_[robot_id] = *msg;
+    RCLCPP_INFO(get_logger(), "Updated knowledge for robot: %s", robot_id.c_str());
+  } else {
+    RCLCPP_WARN(get_logger(), "No valid robot ID found in instances");
   }
 }
 

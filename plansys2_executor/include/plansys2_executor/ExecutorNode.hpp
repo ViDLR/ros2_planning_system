@@ -33,6 +33,7 @@
 #include "plansys2_msgs/msg/action_execution_info.hpp"
 #include "plansys2_msgs/srv/get_ordered_sub_goals.hpp"
 #include "plansys2_msgs/msg/plan.hpp"
+#include "plansys2_msgs/msg/knowledge.hpp"
 #include "std_msgs/msg/string.hpp"
 
 #include "rclcpp/rclcpp.hpp"
@@ -90,6 +91,7 @@ protected:
   rclcpp_lifecycle::LifecyclePublisher<plansys2_msgs::msg::ActionExecutionInfo>::SharedPtr
     execution_info_pub_;
   rclcpp_lifecycle::LifecyclePublisher<plansys2_msgs::msg::Plan>::SharedPtr executing_plan_pub_;
+  rclcpp_lifecycle::LifecyclePublisher<plansys2_msgs::msg::Knowledge>::SharedPtr knowledge_pub_;
 
   rclcpp_action::Server<ExecutePlan>::SharedPtr execute_plan_action_server_;
   rclcpp::Service<plansys2_msgs::srv::GetOrderedSubGoals>::SharedPtr
@@ -108,6 +110,8 @@ protected:
     const std::shared_ptr<GoalHandleExecutePlan> goal_handle);
 
   void execute(const std::shared_ptr<GoalHandleExecutePlan> goal_handle);
+  
+  void notify_manager_node_with_knowledge();
 
   void handle_accepted(const std::shared_ptr<GoalHandleExecutePlan> goal_handle);
 
