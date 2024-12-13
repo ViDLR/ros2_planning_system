@@ -20,6 +20,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Plan.msg"
   "msg/PlanItem.msg"
   "msg/Tree.msg"
+  "msg/Team.msg"
   "srv/AddProblem.srv"
   "srv/AddProblemGoal.srv"
   "srv/AffectNode.srv"
@@ -45,6 +46,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ClearProblemKnowledge.srv"
   "srv/ValidateDomain.srv"
   "srv/RepairKnowledge.srv"
+  "srv/UpdateExecutors.srv"
+  "srv/StartTeams.srv"
+  "srv/StopTeams.srv"
   "srv/SubscribeKnowledgeTopics.srv"
   "action/ExecutePlan.action"
   DEPENDENCIES builtin_interfaces std_msgs action_msgs

@@ -57,6 +57,55 @@ namespace plansys2
 using ExecutePlan = plansys2_msgs::action::ExecutePlan;
 using namespace std::chrono_literals;
 
+ExecutorNode::ExecutorNode(const std::string &node_name, const std::string &namespace_)
+: rclcpp_lifecycle::LifecycleNode(node_name, namespace_),
+  bt_builder_loader_("plansys2_executor", "plansys2::BTBuilder")
+{
+  using namespace std::placeholders;
+
+  this->declare_parameter<std::string>("default_action_bt_xml_filename", "");
+  this->declare_parameter<std::string>("default_start_action_bt_xml_filename", "");
+  this->declare_parameter<std::string>("default_end_action_bt_xml_filename", "");
+  this->declare_parameter<std::string>("bt_builder_plugin", "");
+  this->declare_parameter<std::string>("team_name", "");
+  this->declare_parameter<int>("action_time_precision", 3);
+  this->declare_parameter<bool>("enable_dotgraph_legend", true);
+  this->declare_parameter<bool>("print_graph", false);
+  this->declare_parameter("action_timeouts.actions", std::vector<std::string>{});
+  // Declaring individual action parameters so they can be queried on the command line
+  auto action_timeouts_actions = this->get_parameter("action_timeouts.actions").as_string_array();
+  for (auto action : action_timeouts_actions) {
+    this->declare_parameter<double>(
+      "action_timeouts." + action + ".duration_overrun_percentage",
+      0.0);
+  }
+
+  execute_plan_action_server_ = rclcpp_action::create_server<ExecutePlan>(
+    this->get_node_base_interface(),
+    this->get_node_clock_interface(),
+    this->get_node_logging_interface(),
+    this->get_node_waitables_interface(),
+    "execute_plan",
+    std::bind(&ExecutorNode::handle_goal, this, _1, _2),
+    std::bind(&ExecutorNode::handle_cancel, this, _1),
+    std::bind(&ExecutorNode::handle_accepted, this, _1));
+
+  get_ordered_sub_goals_service_ = create_service<plansys2_msgs::srv::GetOrderedSubGoals>(
+    "executor/get_ordered_sub_goals",
+    std::bind(
+      &ExecutorNode::get_ordered_sub_goals_service_callback,
+      this, std::placeholders::_1, std::placeholders::_2,
+      std::placeholders::_3));
+
+  get_plan_service_ = create_service<plansys2_msgs::srv::GetPlan>(
+    "executor/get_plan",
+    std::bind(
+      &ExecutorNode::get_plan_service_callback,
+      this, std::placeholders::_1, std::placeholders::_2,
+      std::placeholders::_3));
+  
+}
+
 ExecutorNode::ExecutorNode()
 : rclcpp_lifecycle::LifecycleNode("executor"),
   bt_builder_loader_("plansys2_executor", "plansys2::BTBuilder")
@@ -67,6 +116,7 @@ ExecutorNode::ExecutorNode()
   this->declare_parameter<std::string>("default_start_action_bt_xml_filename", "");
   this->declare_parameter<std::string>("default_end_action_bt_xml_filename", "");
   this->declare_parameter<std::string>("bt_builder_plugin", "");
+  this->declare_parameter<std::string>("team_name", "");
   this->declare_parameter<int>("action_time_precision", 3);
   this->declare_parameter<bool>("enable_dotgraph_legend", true);
   this->declare_parameter<bool>("print_graph", false);

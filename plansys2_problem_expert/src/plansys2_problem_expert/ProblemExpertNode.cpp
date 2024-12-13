@@ -837,7 +837,7 @@ void ProblemExpertNode::knowledge_callback(const plansys2_msgs::msg::Knowledge::
 
   if (!robot_id.empty()) {
     latest_knowledge_[robot_id] = *msg;
-    RCLCPP_INFO(get_logger(), "Updated knowledge for robot: %s", robot_id.c_str());
+    // RCLCPP_INFO(get_logger(), "Updated knowledge for robot: %s", robot_id.c_str());
   } else {
     RCLCPP_WARN(get_logger(), "No valid robot ID found in instances");
   }

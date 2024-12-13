@@ -55,7 +55,9 @@ public:
   using CallbackReturnT =
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
-  ExecutorNode();
+  ExecutorNode();  // Default constructor
+  ExecutorNode(const std::string &node_name, const std::string &namespace_ = ""); // New constructor
+
 
   CallbackReturnT on_configure(const rclcpp_lifecycle::State & state);
   CallbackReturnT on_activate(const rclcpp_lifecycle::State & state);

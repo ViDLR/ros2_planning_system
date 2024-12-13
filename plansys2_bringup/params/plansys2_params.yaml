@@ -9,6 +9,10 @@ planner:
       plugin: "plansys2/POPFPlanSolver"
     TFD:
       plugin: "plansys2/TFDPlanSolver"
+    OPTIC:
+      plugin: "plansys2/OPTICPlanSolver"
+    IROS:
+      plugin: "plansys2/IROSPlanSolver"
 executor:
   ros__parameters:
     bt_builder_plugin: "SimpleBTBuilder"

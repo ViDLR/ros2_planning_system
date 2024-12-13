@@ -1,0 +1,7 @@
+# StopTeams.srv
+# Request
+Team[] teams
+---
+# Response
+bool success
+string message

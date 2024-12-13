@@ -19,6 +19,8 @@
 
 #include "plansys2_planner/PlannerNode.hpp"
 #include "plansys2_popf_plan_solver/popf_plan_solver.hpp"
+#include "optic_plan_solver/optic_plan_solver.hpp"
+
 
 #include "lifecycle_msgs/msg/state.hpp"
 

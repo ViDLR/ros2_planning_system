@@ -24,6 +24,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     namespace = LaunchConfiguration('namespace')
+    node_name = LaunchConfiguration('node_name')
     params_file = LaunchConfiguration('params_file')
     action_bt_file = LaunchConfiguration('action_bt_file')
     start_action_bt_file = LaunchConfiguration('start_action_bt_file')
@@ -34,6 +35,11 @@ def generate_launch_description():
         'namespace',
         default_value='',
         description='Namespace')
+        
+    declare_name_cmd = DeclareLaunchArgument(
+        'node_name',
+        default_value='',
+        description='Node name')
 
     declare_action_bt_file_cmd = DeclareLaunchArgument(
         'action_bt_file',
@@ -66,7 +72,7 @@ def generate_launch_description():
     executor_cmd = Node(
         package='plansys2_executor',
         executable='executor_node',
-        name='executor',
+        name=node_name,
         namespace=namespace,
         output='screen',
         parameters=[
@@ -81,6 +87,7 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     ld.add_action(declare_namespace_cmd)
+    ld.add_action(declare_name_cmd)
     ld.add_action(declare_action_bt_file_cmd)
     ld.add_action(declare_start_action_bt_file_cmd)
     ld.add_action(declare_end_action_bt_file_cmd)

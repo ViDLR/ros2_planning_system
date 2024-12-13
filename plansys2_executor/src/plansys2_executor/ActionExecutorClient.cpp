@@ -192,6 +192,49 @@ ActionExecutorClient::should_execute(
   return true;
 }
 
+// bool
+// ActionExecutorClient::should_execute(
+//   const std::string & action, const std::vector<std::string> & args)
+// {
+//   // Check if specialized arguments are not empty
+//   if (!specialized_arguments_.empty()) {
+//     // // Ensure the length of specialized arguments matches the received arguments
+//     // if (specialized_arguments_.size() != args.size()) {
+//     //   RCLCPP_WARN(
+//     //     get_logger(), "Argument length mismatch: received %zu, expected %zu",
+//     //     args.size(), specialized_arguments_.size());
+//     // }
+
+//     // Perform argument matching
+//     for (size_t i = 0; i < specialized_arguments_.size(); i++) {
+//       if (specialized_arguments_[i] != "" && args[i] != "" &&
+//           specialized_arguments_[i] != args[i])
+//       {
+//         RCLCPP_WARN(get_logger(), "Argument mismatch at position %zu: expected %s, got %s",
+//                     i, specialized_arguments_[i].c_str(), args[i].c_str());
+//         return false;  // Arguments don't match, so don't execute
+//       }
+//     }
+//   }
+
+//   // Check if the action matches the managed action exactly
+//   if (action != action_managed_) {
+//     // If not an exact match, check for a prefix match
+//     if (action.rfind(action_managed_, 0) == 0) {
+//       RCLCPP_INFO(get_logger(), "Prefix match detected for action: %s", action.c_str());
+//       return true;
+//     } else {
+//       // RCLCPP_WARN(get_logger(), "Action mismatch: expected %s, got %s", 
+//       //             action_managed_.c_str(), action.c_str());
+//       return false;
+//     }
+//   }
+
+//   // If an exact match was found
+//   return true;
+// }
+
+  
 void
 ActionExecutorClient::send_response(
   const plansys2_msgs::msg::ActionExecution::SharedPtr msg)
@@ -208,8 +251,11 @@ ActionExecutorClient::send_feedback(float completion, const std::string & status
 {
   plansys2_msgs::msg::ActionExecution msg_resp;
   msg_resp.type = plansys2_msgs::msg::ActionExecution::FEEDBACK;
+  // RCLCPP_INFO(this->get_logger(), "node id %s", get_name());
+  // RCLCPP_INFO(this->get_logger(), "action_managed %s", action_managed_.c_str());
+  // RCLCPP_INFO(this->get_logger(), "completion %f", completion);
   msg_resp.node_id = get_name();
-  msg_resp.action = action_managed_;
+  msg_resp.action = action_managed_; //  we can set up some other variable like "takeoff_multirotor"
   msg_resp.arguments = current_arguments_;
   msg_resp.completion = completion;
   msg_resp.status = status;

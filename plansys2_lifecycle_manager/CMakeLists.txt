@@ -4,6 +4,7 @@ project(plansys2_lifecycle_manager)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(plansys2_msgs REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 
@@ -11,6 +12,7 @@ set(dependencies
     rclcpp
     rclcpp_lifecycle
     lifecycle_msgs
+    plansys2_msgs
 )
 
 include_directories(include)
