@@ -61,6 +61,7 @@ ExecutorNode::ExecutorNode(const std::string &node_name, const std::string &name
 : rclcpp_lifecycle::LifecycleNode(node_name, namespace_),
   bt_builder_loader_("plansys2_executor", "plansys2::BTBuilder")
 {
+  RCLCPP_INFO(this->get_logger(), "ExecutorNode created with name: %s, namespace: %s", node_name.c_str(), namespace_.c_str());
   using namespace std::placeholders;
 
   this->declare_parameter<std::string>("default_action_bt_xml_filename", "");
@@ -85,20 +86,20 @@ ExecutorNode::ExecutorNode(const std::string &node_name, const std::string &name
     this->get_node_clock_interface(),
     this->get_node_logging_interface(),
     this->get_node_waitables_interface(),
-    "execute_plan",
+    node_name + "/execute_plan",
     std::bind(&ExecutorNode::handle_goal, this, _1, _2),
     std::bind(&ExecutorNode::handle_cancel, this, _1),
     std::bind(&ExecutorNode::handle_accepted, this, _1));
 
   get_ordered_sub_goals_service_ = create_service<plansys2_msgs::srv::GetOrderedSubGoals>(
-    "executor/get_ordered_sub_goals",
+    node_name + "/get_ordered_sub_goals",
     std::bind(
       &ExecutorNode::get_ordered_sub_goals_service_callback,
       this, std::placeholders::_1, std::placeholders::_2,
       std::placeholders::_3));
 
   get_plan_service_ = create_service<plansys2_msgs::srv::GetPlan>(
-    "executor/get_plan",
+    node_name + "/get_plan",
     std::bind(
       &ExecutorNode::get_plan_service_callback,
       this, std::placeholders::_1, std::placeholders::_2,
@@ -110,6 +111,7 @@ ExecutorNode::ExecutorNode()
 : rclcpp_lifecycle::LifecycleNode("executor"),
   bt_builder_loader_("plansys2_executor", "plansys2::BTBuilder")
 {
+  RCLCPP_INFO(this->get_logger(), "DEPUIS LE DEBUT !!! TIN TIN TIN");
   using namespace std::placeholders;
 
   this->declare_parameter<std::string>("default_action_bt_xml_filename", "");

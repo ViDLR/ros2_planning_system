@@ -4,12 +4,15 @@ namespace plansys2
 {
 
 LifecycleServiceClient::LifecycleServiceClient(
-  const std::string & node_name, const std::string & managed_node)
-: Node(sanitize_node_name(node_name)), managed_node_(managed_node)
-{}
+  const std::string & node_name, const std::string & managed_node, const std::string & namespace_)
+: Node(node_name, namespace_), managed_node_(managed_node){
+  RCLCPP_INFO(this->get_logger(), "Created LifecycleServiceClient with name %s and namespace: %s", node_name.c_str(),namespace_.c_str());
+}
+
 
 void LifecycleServiceClient::init()
 {
+  RCLCPP_INFO(this->get_logger(), "Initializing LifecycleServiceClient for %s", managed_node_.c_str());
   client_get_state_ = this->create_client<lifecycle_msgs::srv::GetState>(managed_node_ + "/get_state");
   client_change_state_ = this->create_client<lifecycle_msgs::srv::ChangeState>(managed_node_ + "/change_state");
 
@@ -17,6 +20,8 @@ void LifecycleServiceClient::init()
          !client_change_state_->wait_for_service(std::chrono::seconds(1))) {
     RCLCPP_INFO(this->get_logger(), "Waiting for lifecycle services...");
   }
+
+  RCLCPP_INFO(this->get_logger(), "Initialized LifecycleServiceClient for %s", managed_node_.c_str());
 }
 
 unsigned int LifecycleServiceClient::get_state(std::chrono::seconds time_out)
@@ -47,12 +52,6 @@ bool LifecycleServiceClient::change_state(std::uint8_t transition, std::chrono::
   return future_result.get()->success;
 }
 
-std::string LifecycleServiceClient::sanitize_node_name(const std::string & node_name)
-{
-  std::string sanitized = node_name;
-  std::replace(sanitized.begin(), sanitized.end(), '/', '_');
-  return sanitized;
-}
 
 bool startup_function(
   std::map<std::string, std::shared_ptr<LifecycleServiceClient>> & manager_nodes,

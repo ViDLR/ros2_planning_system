@@ -32,7 +32,11 @@ std::future_status wait_for_result(FutureT & future, WaitTimeT time_to_wait)
 class LifecycleServiceClient : public rclcpp::Node
 {
 public:
-  explicit LifecycleServiceClient(const std::string & node_name, const std::string & managed_node);
+  // Updated constructor with namespace support
+  explicit LifecycleServiceClient(
+    const std::string & node_name,
+    const std::string & managed_node,
+    const std::string & namespace_ = "");
 
   void init();
 
@@ -41,8 +45,6 @@ public:
   bool change_state(
     std::uint8_t transition,
     std::chrono::seconds time_out = std::chrono::seconds(3));
-
-  static std::string sanitize_node_name(const std::string & node_name);
 
 private:
   std::shared_ptr<rclcpp::Client<lifecycle_msgs::srv::GetState>> client_get_state_;
