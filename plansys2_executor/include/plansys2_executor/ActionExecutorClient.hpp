@@ -44,6 +44,11 @@ public:
   ActionExecutorClient(
     const std::string & node_name,
     const std::chrono::nanoseconds & rate);
+    
+  ActionExecutorClient(
+    const std::string & node_name,
+    const std::string & team_name,
+    const std::chrono::nanoseconds &rate);
 
   rclcpp::Time get_start_time() const {return start_time_;}
   plansys2_msgs::msg::ActionPerformerStatus get_internal_status() const {return status_;}

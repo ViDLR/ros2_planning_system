@@ -28,6 +28,29 @@ namespace plansys2
 
 using namespace std::chrono_literals;
 
+// New Constructor: Sets namespace using team_name
+ActionExecutorClient::ActionExecutorClient(
+  const std::string &node_name,
+  const std::string &team_name,
+  const std::chrono::nanoseconds &rate)
+: CascadeLifecycleNode(node_name, team_name),  // Explicitly set namespace here
+  rate_(rate),
+  commited_(false)
+{
+  declare_parameter<std::string>("action_name", "");
+  declare_parameter<std::vector<std::string>>(
+    "specialized_arguments", std::vector<std::string>({}));
+
+  double default_rate = 1.0 / std::chrono::duration<double>(rate_).count();
+  declare_parameter<double>("rate", default_rate);
+  status_.state = plansys2_msgs::msg::ActionPerformerStatus::NOT_READY;
+  status_.status_stamp = now();
+  status_.node_name = get_name();
+
+  RCLCPP_INFO(this->get_logger(), "ActionExecutorClient created in namespace '%s'", team_name.c_str());
+}
+
+
 ActionExecutorClient::ActionExecutorClient(
   const std::string & node_name,
   const std::chrono::nanoseconds & rate)
@@ -45,6 +68,7 @@ ActionExecutorClient::ActionExecutorClient(
   status_.status_stamp = now();
   status_.node_name = get_name();
 }
+
 
 using CallbackReturnT =
   rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
