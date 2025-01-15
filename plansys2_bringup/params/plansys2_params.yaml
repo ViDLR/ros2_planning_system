@@ -15,5 +15,5 @@ planner:
       plugin: "plansys2/IROSPlanSolver"
 executor:
   ros__parameters:
-    bt_builder_plugin: "SimpleBTBuilder"
-    # bt_builder_plugin: "STNBTBuilder"
+    # bt_builder_plugin: "SimpleBTBuilder"
+    bt_builder_plugin: "STNBTBuilder"

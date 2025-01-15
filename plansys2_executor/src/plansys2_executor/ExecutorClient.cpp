@@ -51,15 +51,41 @@ ExecutorClient::ExecutorClient(const std::string & node_name)
   get_plan_client_ = node_->create_client<plansys2_msgs::srv::GetPlan>("executor/get_plan");
 }
 
+ExecutorClient::ExecutorClient(const std::string & node_name, const std::string & ns, const std::string & executor_name)
+{
+  node_ = rclcpp::Node::make_shared(node_name);
+
+  // Store the namespace and executor name for use in creating clients
+  namespace_ = ns.empty() ? "" : ns + "/";
+  executor_name_ = executor_name;
+
+  createActionClient();
+
+  get_ordered_sub_goals_client_ = node_->create_client<plansys2_msgs::srv::GetOrderedSubGoals>(
+    namespace_ + executor_name_ + "/get_ordered_sub_goals");
+  get_plan_client_ = node_->create_client<plansys2_msgs::srv::GetPlan>(
+    namespace_ + executor_name_ + "/get_plan");
+}
+
+
 void
 ExecutorClient::createActionClient()
 {
-  action_client_ = rclcpp_action::create_client<ExecutePlan>(node_, "execute_plan");
+  // Create the action client using the namespace and executor name
+  action_client_ = rclcpp_action::create_client<ExecutePlan>(
+    node_, namespace_ + executor_name_ + "/execute_plan");
 
   if (!this->action_client_->wait_for_action_server(3s)) {
-    RCLCPP_ERROR(node_->get_logger(), "Action server not available after waiting");
+    RCLCPP_ERROR(node_->get_logger(), 
+      "Action server not available at %s after waiting", 
+      (namespace_ + executor_name_ + "/execute_plan").c_str());
+  } else {
+    RCLCPP_INFO(node_->get_logger(), 
+      "Connected to action server at %s", 
+      (namespace_ + executor_name_ + "/execute_plan").c_str());
   }
 }
+
 
 bool
 ExecutorClient::start_plan_execution(const plansys2_msgs::msg::Plan & plan)

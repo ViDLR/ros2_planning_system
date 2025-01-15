@@ -40,6 +40,7 @@ public:
 
   ExecutorClient();
   explicit ExecutorClient(const std::string & node_name);
+  explicit ExecutorClient(const std::string & node_name, const std::string & ns, const std::string & executor_name);
 
   bool start_plan_execution(const plansys2_msgs::msg::Plan & plan);
   bool execute_and_check_plan();
@@ -74,6 +75,11 @@ private:
   bool on_new_goal_received(const plansys2_msgs::msg::Plan & plan);
   bool should_cancel_goal();
   void createActionClient();
+
+
+  std::string namespace_;      // Added
+  std::string executor_name_;  // Added
+  
 };
 
 }  // namespace plansys2
